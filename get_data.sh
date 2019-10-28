@@ -45,7 +45,7 @@ done
 
 [[ $date =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || echo_exit "$0 $* >>>> -d YYYY-MM-DD";
 [[ $geo =~ ^(us|gb|ca|de|au|fr|jp)$ ]] || echo_exit "$0 $* >>>> -g us|gb|ca|de|au|fr|jp";
-[[ $mode =~ ^(y|n)$ ]] || echo_exit "$0 $* >>>> -m y|n (y: d365)";
+[[ $mode =~ ^(y|n)$ ]] || echo_exit "$0 $* >>>> -m y|n (y: labels)";
 export SCRIPTPATH="$( cd "$(dirname "$0")" ; pwd -P )"
 export DATADIR=$SCRIPTPATH/data/$date.$geo
 mkdir -p $DATADIR

@@ -29,7 +29,7 @@ function get_af() {
 
 # assertions ------
 if [ $# -eq 0 ] ; then
-    echo_exit "Usage : $0 -d date -g geo -m y/n(y: d365)"
+    echo_exit "Usage : $0 -d date -g geo -m y/n(y: labels)"
 fi
 
 date=""

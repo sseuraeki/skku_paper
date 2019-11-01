@@ -26,7 +26,8 @@ for label in range(5):
 	train_df = label_df.sample(frac=0.8, random_state=1)
 	train_dfs.append(train_df)
 
-	valid_df = label_df.drop(train_df.index)
+	label_df = label_df.drop(train_df.index)
+	valid_df = label_df.sample(frac=0.5, random_state=1)
 	valid_dfs.append(valid_df)
 
 	test_df = label_df.drop(valid_df.index)

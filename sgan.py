@@ -120,7 +120,7 @@ def build_gan(generator, unsup_model):
 	model.compile(loss='binary_crossentropy', optimizer=Adam(lr=learning_rate, beta_1=beta_1))
 	return model
 
-def sample_supervised(x, y, n_samples, n_classes):
+def sample_supervised(x, y, n_samples, n_batch):
 	start_idx = n_batch * n_samples
 	end_idx = (n_batch + 1) * n_samples
 	if end_idx > x.shape[0]:

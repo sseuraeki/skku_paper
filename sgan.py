@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 batch_size = 32
 hidden_units = 128
 n_epochs = 5
-learning_rate = 0.0006
+learning_rate = 0.0003
 beta_1 = 0.5
 latent_dim = 100
 n_classes = 5
@@ -230,7 +230,8 @@ sup_valid_y = to_categorical(pd.read_csv(sup_valid_y_path)['roas'].values)
 sup_test_x = np.load(sup_test_x_path)
 sup_test_y = to_categorical(pd.read_csv(sup_test_y_path)['roas'].values)
 
-unsup_x = np.random.shuffle(np.load(unsup_path))
+unsup_x = np.load(unsup_path)
+np.random.shuffle(unsup_x)
 
 # build models
 seq_shape = sup_train_x.shape

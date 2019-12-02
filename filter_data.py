@@ -37,5 +37,10 @@ df = df[df['retention_d3'] <= 100.0]
 df = df[df['retention_d7'] <= 100.0]
 print('Abnormal retention dropped: {}'.format(len(df)), file=sys.stderr)
 
+# remove records with abnormal roas
+if sys.argv[1] == 'labeled':
+	df = df[df['roas'] <= 1.0]
+	print('Abnormal roas dropped: {}'.format(len(df)), file=sys.stderr)
+
 # write
 df.to_csv(sys.stdout, index=False)

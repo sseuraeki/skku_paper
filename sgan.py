@@ -49,17 +49,14 @@ def build_discriminator(seq_shape, n_classes, hidden_units=128):
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(seq_layer)
 	h = LeakyReLU(alpha=0.2)(h)
-	h = Dropout(0.4)(h)
 
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
 	h = LeakyReLU(alpha=0.2)(h)
-	h = Dropout(0.4)(h)
 
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
 	h = LeakyReLU(alpha=0.2)(h)
-	h = Dropout(0.4)(h)
 
 	# fully connect (None, 512)
 	h = Flatten()(h)
@@ -123,7 +120,7 @@ def build_gan(generator, unsup_model):
 	model.compile(loss='binary_crossentropy', optimizer=Adam(lr=learning_rate, beta_1=beta_1))
 	return model
 
-def sample_supervised(x, y, n_samples, n_batch):
+def sample_supervised(x, y, n_samples, n_classes):
 	start_idx = n_batch * n_samples
 	end_idx = (n_batch + 1) * n_samples
 	if end_idx > x.shape[0]:
@@ -233,7 +230,7 @@ sup_valid_y = to_categorical(pd.read_csv(sup_valid_y_path)['roas'].values)
 sup_test_x = np.load(sup_test_x_path)
 sup_test_y = to_categorical(pd.read_csv(sup_test_y_path)['roas'].values)
 
-unsup_x = np.load(unsup_path)
+unsup_x = np.random.shuffle(np.load(unsup_path))
 
 # build models
 seq_shape = sup_train_x.shape

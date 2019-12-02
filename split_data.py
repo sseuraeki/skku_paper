@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 import sys
+from sklearn.utils import shuffle
 
 if len(sys.argv) != 2:
 	print('Usg: python {} csvfile'.format(sys.argv[0]))
@@ -36,6 +37,11 @@ for label in range(5):
 trainset = pd.concat(train_dfs, ignore_index=True, sort=False)
 validset = pd.concat(valid_dfs, ignore_index=True, sort=False)
 testset = pd.concat(test_dfs, ignore_index=True, sort=False)
+
+# shuffle data
+trainset = shuffle(trainset)
+validset = shuffle(validset)
+testset = shuffle(testset)
 
 # write
 trainset.to_csv('{}/data/trainset.csv'.format(SCRIPTPATH), index=False)

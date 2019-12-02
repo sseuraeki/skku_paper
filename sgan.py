@@ -12,10 +12,10 @@ import matplotlib.pyplot as plt
 # maybe sample supervised balance?
 
 # parameters
-batch_size = 128
+batch_size = 32
 hidden_units = 128
-n_epochs = 100
-learning_rate = 0.0002
+n_epochs = 5
+learning_rate = 0.0006
 beta_1 = 0.5
 latent_dim = 100
 n_classes = 5
@@ -49,14 +49,17 @@ def build_discriminator(seq_shape, n_classes, hidden_units=128):
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(seq_layer)
 	h = LeakyReLU(alpha=0.2)(h)
+	h = Dropout(0.4)(h)
 
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
 	h = LeakyReLU(alpha=0.2)(h)
+	h = Dropout(0.4)(h)
 
 	# downsample (None, 4, 128)
 	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
 	h = LeakyReLU(alpha=0.2)(h)
+	h = Dropout(0.4)(h)
 
 	# fully connect (None, 512)
 	h = Flatten()(h)
@@ -256,11 +259,16 @@ test_acc = correct / sup_test_y.shape[0]
 print('Test accuracy:', test_acc)
 
 # plot results
-#sup_losses, sup_accs, unsup_losses, gan_losses, valid_accs = results
-
-
-
-
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+result1, = ax.plot(results[0], label='Supervised loss')
+result2, = ax.plot(results[1], label='Trainset acc')
+result3, = ax.plot(results[2], label='Unsupervised loss')
+result4, = ax.plot(results[3], label='GAN loss')
+result5, = ax.plot(results[4], label='Validset acc')
+ax.legend(loc='upper left')
+plt.title('SGAN results')
+plt.show()
 
 
 

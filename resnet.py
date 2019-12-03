@@ -84,7 +84,7 @@ def build_model(seq_shape, n_classes):
 		optimizer=Adam(lr=learning_rate),
 		metrics=['accuracy'])
 
-	return mdoel
+	return model
 
 # load data
 train_x = np.load('./data/train_series.npy')

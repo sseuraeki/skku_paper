@@ -37,10 +37,18 @@ df = df[df['retention_d3'] <= 100.0]
 df = df[df['retention_d7'] <= 100.0]
 print('Abnormal retention dropped: {}'.format(len(df)), file=sys.stderr)
 
-# remove records with abnormal roas
-if sys.argv[1] == 'labeled':
-	df = df[df['roas'] <= 1.0]
-	print('Abnormal roas dropped: {}'.format(len(df)), file=sys.stderr)
+# return > ratio
+df['return_d1'] = df['return_d1'] / df['spend']
+df['return_d2'] = df['return_d2'] / df['spend']
+df['return_d3'] = df['return_d3'] / df['spend']
+df['return_d7'] = df['return_d7'] / df['spend']
+
+# drop abnormal returns
+df = df[df['return_d1'] < 1.0]
+df = df[df['return_d2'] < 1.0]
+df = df[df['return_d3'] < 1.0]
+df = df[df['return_d7'] < 1.0]
+print('Abnormal return dropped: {}'.format(len(df)), file=sys.stderr)
 
 # write
 df.to_csv(sys.stdout, index=False)

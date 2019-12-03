@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from keras.models import Model
 from keras.optimizers import Adam
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, TerminateOnNaN
 from keras.layers import Input, Conv1D, Activation
 from keras.layers import add, GlobalAveragePooling1D, Dense
 from keras.layers.normalization import BatchNormalization
@@ -76,12 +76,12 @@ def build_model(seq_shape, n_classes):
 
 	# output
 	pooling = GlobalAveragePooling1D()(b3)
-	output_layer = Dense(n_classes, activation='relu')(pooling)
+	output_layer = Dense(n_classes, activation='softmax')(pooling)
 
 	# compile
 	model = Model(inputs=seq_layer, outputs=output_layer)
 	model.compile(loss='categorical_crossentropy',
-		optimizer=Adam(lr=learning_rate),
+		optimizer=Adam(lr=learning_rate, clipnorm=1),
 		metrics=['accuracy'])
 
 	return model
@@ -99,14 +99,15 @@ test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 seq_shape = train_x.shape
 
 model = build_model(seq_shape, n_classes)
+term = TerminateOnNaN()
 ckpt = ModelCheckpoint(filepath=model_path, verbose=1, save_best_only=True)
 
 history = model.fit(train_x,
 	train_y,
-	batch_size=128,
+	batch_size=16,
 	epochs=1000,
 	validation_data=(valid_x, valid_y),
-	callbacks=[ckpt])
+	callbacks=[term, ckpt])
 
 # predict
 model.load_weights(model_path)

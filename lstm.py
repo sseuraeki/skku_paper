@@ -8,19 +8,15 @@ from keras.callbacks.callbacks import ModelCheckpoint
 import matplotlib.pyplot as plt
 
 # functions
-def build_lstm(seq_shape, plain_shape, n_classes, hidden_units, lr):
+def build_lstm(seq_shape, n_classes, hidden_units, lr):
 	seq_layer = Input(shape=(seq_shape[0], seq_shape[1],))
-	plain_layer = Input(shape=(plain_shape,))
 
 	h = LSTM(hidden_units)(seq_layer)
-	#h = concatenate([h, plain_layer])
-	#h = Dense(hidden_units // 2, activation='relu')(h)
-	#h = Dropout(0.4)(h)
 
 	y = Dense(n_classes, activation='softmax')(h)
 
 	adam = Adam(lr=lr, beta_1=0.9, beta_2=0.999)
-	model = Model([seq_layer, plain_layer], y)
+	model = Model(seq_layer, y)
 	model.compile(loss='categorical_crossentropy',
 		optimizer=adam,
 		metrics=['acc'])
@@ -33,35 +29,30 @@ n_classes = 3
 hidden_units = 128
 
 # load data
-train_x_series = np.load('./data/train_series.npy')
+train_x_series = np.load('./data/train_series_sampled.npy')
 valid_x_series = np.load('./data/valid_series.npy')
 test_x_series = np.load('./data/test_series.npy')
 
-train_x_plain = pd.read_csv('./data/trainset.csv')[['spend', 'install']].values
-valid_x_plain = pd.read_csv('./data/validset.csv')[['spend', 'install']].values
-test_x_plain = pd.read_csv('./data/testset.csv')[['spend', 'install']].values
-
-train_y = to_categorical(pd.read_csv('./data/trainset.csv')['roas'].values)
+train_y = to_categorical(pd.read_csv('./data/train_sampled.csv')['roas'].values)
 valid_y = to_categorical(pd.read_csv('./data/validset.csv')['roas'].values)
 test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 
 # build model and train
 seq_shape = train_x_series.shape[1:]
-plain_shape = train_x_plain.shape[1]
 
-model = build_lstm(seq_shape, plain_shape, n_classes, hidden_units, lr)
+model = build_lstm(seq_shape, n_classes, hidden_units, lr)
 ckpt = ModelCheckpoint(filepath=weights_filepath, verbose=1, save_best_only=True)
 
-history = model.fit([train_x_series, train_x_plain],
+history = model.fit(train_x_series,
 	train_y,
 	batch_size=128,
 	epochs=500,
-	validation_data=([valid_x_series, valid_x_plain], valid_y),
+	validation_data=(valid_x_series, valid_y),
 	callbacks=[ckpt])
 
 # predict
 model.load_weights(weights_filepath)
-predictions = model.predict([test_x_series, test_x_plain])
+predictions = model.predict(test_x_series)
 
 # acc
 correct = 0

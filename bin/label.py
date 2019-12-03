@@ -6,7 +6,7 @@ def label(x, quantiles):
 	for n_class in range(n_classes):
 		if x <= quantiles[n_class]:
 			return n_class
-	return len(quantiles)
+	return len(quantiles) - 1
 
 if len(sys.argv) != 3:
 	print('Usg: python {} csvfile n_classes'.format(sys.argv[0]))
@@ -20,7 +20,8 @@ for n_class in range(n_classes):
 	quantile = 1.0 / n_classes * (n_class + 1)
 	quantile = df['roas'].quantile(quantile) // 0.01 * 0.01
 	quantiles.append(quantile)
-
+print(quantiles)
+exit()
 df['roas'] = df['roas'].apply(lambda x: label(x, quantiles))
 
 # remove unneeded cols

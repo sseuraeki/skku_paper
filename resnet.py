@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint

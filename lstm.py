@@ -4,7 +4,6 @@ from keras.layers import Input, LSTM, Dense, concatenate, Dropout
 from keras.optimizers import Adam
 from keras.models import Model
 from tensorflow.keras.utils import to_categorical
-from keras.metrics import accuracy
 from keras.callbacks.callbacks import ModelCheckpoint
 import matplotlib.pyplot as plt
 
@@ -14,9 +13,9 @@ def build_lstm(seq_shape, plain_shape, n_classes, hidden_units, lr):
 	plain_layer = Input(shape=(plain_shape,))
 
 	h = LSTM(hidden_units)(seq_layer)
-	h = concatenate([h, plain_layer])
-	h = Dense(hidden_units // 2, activation='relu')(h)
-	h = Dropout(0.4)(h)
+	#h = concatenate([h, plain_layer])
+	#h = Dense(hidden_units // 2, activation='relu')(h)
+	#h = Dropout(0.4)(h)
 
 	y = Dense(n_classes, activation='softmax')(h)
 
@@ -30,7 +29,7 @@ def build_lstm(seq_shape, plain_shape, n_classes, hidden_units, lr):
 # params
 weights_filepath = './lstm_weights.hdf5'
 lr = 0.001
-n_classes = 5
+n_classes = 3
 hidden_units = 128
 
 # load data
@@ -56,7 +55,7 @@ ckpt = ModelCheckpoint(filepath=weights_filepath, verbose=1, save_best_only=True
 history = model.fit([train_x_series, train_x_plain],
 	train_y,
 	batch_size=128,
-	epochs=1000,
+	epochs=500,
 	validation_data=([valid_x_series, valid_x_plain], valid_y),
 	callbacks=[ckpt])
 

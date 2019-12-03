@@ -104,8 +104,8 @@ ckpt = ModelCheckpoint(filepath=model_path, verbose=1, save_best_only=True)
 
 history = model.fit(train_x,
 	train_y,
-	batch_size=16,
-	epochs=1000,
+	batch_size=64,
+	epochs=500,
 	validation_data=(valid_x, valid_y),
 	callbacks=[term, ckpt])
 
@@ -124,8 +124,8 @@ test_acc = (correct / len(test_y)) // 0.01 * 0.01
 # plot learning curve
 f = plt.figure()
 ax = f.add_subplot(111)
-plt.plot(history.history['acc'])
-plt.plot(history.history['val_acc'])
+plt.plot(history.history['accuracy'])
+plt.plot(history.history['val_accuracy'])
 plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')

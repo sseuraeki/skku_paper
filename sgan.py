@@ -10,10 +10,10 @@ from keras.layers import Reshape, Conv2DTranspose
 import matplotlib.pyplot as plt
 
 # parameters
-batch_size = 32
+batch_size = 16
 hidden_units = 128
-n_epochs = 1000
-learning_rate = 0.0003
+n_epochs = 500
+learning_rate = 0.0006
 beta_1 = 0.5
 latent_dim = 100
 n_classes = 3
@@ -264,7 +264,7 @@ result4, = ax.plot(results[3], label='GAN loss')
 result5, = ax.plot(results[4], label='Validset acc')
 ax.legend(loc='upper left')
 plt.title('SGAN results')
-plt.text(0.02, 0.84,
+plt.text(0.02, 0.65,
 	'testset accuracy: {}'.format(test_acc),
 	ha='left', va='top',
 	transform=ax.transAxes)

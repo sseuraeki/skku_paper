@@ -1,9 +1,12 @@
+import numpy as np
 from keras.models import Model
 from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Input, Conv1D, Activation
 from keras.layers import add, GlobalAveragePooling1D, Dense
 from keras.layers.normalization import BatchNormalization
+from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
 
 # parameters
 hidden_units = 128

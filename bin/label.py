@@ -20,8 +20,7 @@ for n_class in range(n_classes):
 	quantile = 1.0 / n_classes * (n_class + 1)
 	quantile = df['roas'].quantile(quantile) // 0.01 * 0.01
 	quantiles.append(quantile)
-print(quantiles)
-exit()
+
 df['roas'] = df['roas'].apply(lambda x: label(x, quantiles))
 
 # remove unneeded cols

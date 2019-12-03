@@ -9,16 +9,14 @@ from keras.layers import Dropout, Dense, Activation, Lambda
 from keras.layers import Reshape, Conv2DTranspose
 import matplotlib.pyplot as plt
 
-# maybe sample supervised balance?
-
 # parameters
 batch_size = 32
 hidden_units = 128
-n_epochs = 5
+n_epochs = 1000
 learning_rate = 0.0003
 beta_1 = 0.5
 latent_dim = 100
-n_classes = 5
+n_classes = 3
 sup_train_x_path = './data/train_series.npy'
 sup_train_y_path = './data/trainset.csv'
 sup_valid_x_path = './data/valid_series.npy'
@@ -266,6 +264,10 @@ result4, = ax.plot(results[3], label='GAN loss')
 result5, = ax.plot(results[4], label='Validset acc')
 ax.legend(loc='upper left')
 plt.title('SGAN results')
+plt.text(0.02, 0.84,
+	'testset accuracy: {}'.format(test_acc),
+	ha='left', va='top',
+	transform=ax.transAxes)
 plt.show()
 
 

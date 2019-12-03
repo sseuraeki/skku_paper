@@ -1,32 +1,27 @@
 import pandas as pd
 import sys
 
-def label(x, q1, q2, q3, q4):
-	if x <= q1:
-		return 0
-	if x <= q2:
-		return 1
-	if x <= q3:
-		return 2
-	if x <= q4:
-		return 3
-	return 4
+def label(x, quantiles):
+	n_classes = len(quantiles)
+	for n_class in range(n_classes):
+		if x <= quantiles[n_class]:
+			return n_class
+	return len(quantiles)
 
-if len(sys.argv) != 2:
-	print('Usg: python {} csvfile'.format(sys.argv[0]))
+if len(sys.argv) != 3:
+	print('Usg: python {} csvfile n_classes'.format(sys.argv[0]))
 	exit()
 
 df = pd.read_csv(sys.argv[1])
+n_classes = int(sys.argv[2])
 
-if 'roas' in df.columns:
-	print(df['roas'].describe(), file=sys.stderr)
+quantiles = []
+for n_class in range(n_classes):
+	quantile = 1.0 / n_classes * (n_class + 1)
+	quantile = df['roas'].quantile(quantile) // 0.01 * 0.01
+	quantiles.append(quantile)
 
-	q1 = df['roas'].quantile(0.2) // 0.01 * 0.01
-	q2 = df['roas'].quantile(0.4) // 0.01 * 0.01
-	q3 = df['roas'].quantile(0.6) // 0.01 * 0.01
-	q4 = df['roas'].quantile(0.8) // 0.01 * 0.01
-
-	df['roas'] = df['roas'].apply(lambda x: label(x, q1, q2, q3, q4))
+df['roas'] = df['roas'].apply(lambda x: label(x, quantiles))
 
 # remove unneeded cols
 del df['date'], df['appid'], df['campaign']

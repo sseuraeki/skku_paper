@@ -96,7 +96,7 @@ valid_y = to_categorical(pd.read_csv('./data/validset.csv')['roas'].values)
 test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 
 # build model and train
-seq_shape = train_x.shape[1:]
+seq_shape = train_x.shape
 
 model = build_model(seq_shape, n_classes)
 ckpt = ModelCheckpoint(filepath=model_path, verbose=1, save_best_only=True)

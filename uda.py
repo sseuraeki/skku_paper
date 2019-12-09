@@ -18,14 +18,18 @@ hidden_units = 128
 n_epochs = 10
 learning_rate = 0.001
 
-if len(sys.argv) != 7:
+if len(sys.argv) != 8:
 	print(
-		'Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png cnn/lstm/resnet'.format(
+		'Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png cnn/lstm/resnet scale/jitter/time_warp/crop'.format(
 			sys.argv[0]))
 	exit()
 
 if sys.argv[6] not in ['cnn', 'lstm', 'resnet']:
 	print("ERROR: model type must be either one of ['cnn', 'lstm', 'resnet']")
+	exit()
+
+if sys.argv[7] not in ['scale', 'jitter', 'time_warp', 'crop']:
+	print("ERROR: augment type must be either one of ['scale', 'jitter', 'time_warp', 'crop']")
 	exit()
 
 train_x_path = sys.argv[1]
@@ -38,6 +42,7 @@ model_json_path = sys.argv[3]
 model_weights_path = sys.argv[4]
 result_image_path = sys.argv[5]
 model_type = sys.argv[6]
+augment_type = sys.argv[7]
 
 # functions
 def build_supervised_model(seq_shape, n_classes):
@@ -65,7 +70,7 @@ def build_supervised_model(seq_shape, n_classes):
 	if model_type == 'lstm':
 		h = LSTM(hidden_units, return_sequences=True)(labeled_input)
 		h = LSTM(hidden_units)(h)
-		
+
 	if model_type == 'resnet':
 		b1 = Conv1D(filters=hidden_units, kernel_size=8, padding='same')(labeled_input)
 		b1 = BatchNormalization()(b1)
@@ -159,8 +164,21 @@ def sample_unsupervised(dataset, n_samples, n_batch):
 	x = dataset[start_idx:end_idx]
 	return x
 
+def augment(x, augment_type):
+	if augment_type == 'scale':
+		return tsaug.random_affine(x, max_a=1.1, min_a=0.1, max_b=0.01, min_b=-0.01)
+	if augment_type == 'jitter':
+		return tsaug.random_jitter(x)
+	if augment_type == 'time_warp':
+		return tsaug.random_time_warp(x)
+	if augment_type == 'crop':
+		x = tsaug.random_crop(x, crop_size=2)
+		nan = np.zeros((x.shape))
+		return np.concatenate((x, nan), axis=1)
+	return None
+
 def train(supervised_model, uda,
-	train_x, train_y, valid_x, valid_y, unlabeled_x, augmented_x,
+	train_x, train_y, valid_x, valid_y, unlabeled_x,
 	n_epochs, supervised_batch_size):
 	# calculate number of batches
 	n_batches = int(np.ceil(train_x.shape[0] / supervised_batch_size))
@@ -183,8 +201,8 @@ def train(supervised_model, uda,
 			train_accs.append(sup_acc)
 
 			# update uda
-			aug_x_batch = sample_batch(augmented_x, None, unsupervised_batch_size, n_batch)
 			unlabel_x_batch = sample_batch(unlabeled_x, None, unsupervised_batch_size, n_batch)
+			aug_x_batch = augment(unlabel_x_batch, augment_type)
 			uda.train_on_batch(aug_x_batch, supervised_model.predict(unlabel_x_batch))
 
 		# test on validset
@@ -213,7 +231,6 @@ unlabeled_x = np.load(unlabeled_path)
 
 train_y = to_categorical(pd.read_csv(train_y_path)['roas'].values)
 valid_y = to_categorical(pd.read_csv(valid_y_path)['roas'].values)
-augmented_x = tsaug.random_time_warp(unlabeled_x)
 
 # build model
 n_classes = len(pd.read_csv(train_y_path)['roas'].unique())
@@ -226,7 +243,7 @@ with open(model_json_path, 'w') as json_file:
 
 # train
 results = train(supervised_model, uda,
-	train_x, train_y, valid_x, valid_y, unlabeled_x, augmented_x,
+	train_x, train_y, valid_x, valid_y, unlabeled_x,
 	n_epochs, batch_size)
 
 # plot results

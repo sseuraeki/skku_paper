@@ -11,9 +11,9 @@ from keras.layers import Reshape, Conv2DTranspose, BatchNormalization
 import matplotlib.pyplot as plt
 
 # parameters
-batch_size = 64 #16
+batch_size = 64
 hidden_units = 128
-n_epochs = 400
+n_epochs = 10
 learning_rate = 0.0003
 beta_1 = 0.5
 latent_dim = 100
@@ -240,8 +240,6 @@ def train(generator, sup_model, unsup_model, gan,
 	for n_epoch in range(n_epochs):
 		sup_losses = []
 		sup_accs = []
-		unsup_losses = []
-		gan_losses = []		
 		for n_batch in range(n_batches):
 			# update supervised discriminator
 			sup_x_batch, sup_y_batch = sample_supervised(sup_x, sup_y, sup_batch_size, n_batch)
@@ -254,13 +252,10 @@ def train(generator, sup_model, unsup_model, gan,
 			unsup_loss1 = unsup_model.train_on_batch(x_real, y_real)
 			x_fake, y_fake = generate_unsupervised_fake(generator, latent_dim, unsup_batch_size)
 			unsup_loss2 = unsup_model.train_on_batch(x_fake, y_fake)
-			unsup_loss = unsup_loss1 + unsup_loss2
-			unsup_losses.append(unsup_loss)
 
 			# update generator
 			x_gan, y_gan = generate_latent_points(latent_dim, unsup_batch_size), np.ones((unsup_batch_size, 1))
 			gan_loss = gan.train_on_batch(x_gan, y_gan)
-			gan_losses.append(gan_loss)
 
 		# test on validset
 		score = sup_model.evaluate(valid_x, valid_y)
@@ -268,8 +263,6 @@ def train(generator, sup_model, unsup_model, gan,
 		print('Epoch', n_epoch+1)
 		print('Supervised loss:', np.mean(sup_losses))
 		print('Supervised acc:', np.mean(sup_accs))
-		print('Unsupervised loss:', np.mean(unsup_losses))
-		print('GAN loss:', np.mean(gan_losses))
 		print('Valid acc:', score[1])
 		print('')
 
@@ -313,8 +306,8 @@ results = train(generator, sup_model, unsup_model, gan,
 # plot results
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
-result1, = ax.plot(results[1], label='Trainset acc')
-result2, = ax.plot(results[4], label='Validset acc')
+result1, = ax.plot(results[0], label='Trainset acc')
+result2, = ax.plot(results[1], label='Validset acc')
 ax.legend(loc='upper left')
 plt.title('SGAN results')
 plt.savefig(result_image_path)

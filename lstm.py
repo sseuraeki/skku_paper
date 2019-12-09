@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 from keras.layers import Input, LSTM, Dense, concatenate, Dropout
@@ -11,7 +12,8 @@ import matplotlib.pyplot as plt
 def build_lstm(seq_shape, n_classes, hidden_units, lr):
 	seq_layer = Input(shape=(seq_shape[0], seq_shape[1],))
 
-	h = LSTM(hidden_units)(seq_layer)
+	h = LSTM(hidden_units, return_sequences=True)(seq_layer)
+	h = LSTM(hidden_units)(h)
 
 	y = Dense(n_classes, activation='softmax')(h)
 
@@ -23,17 +25,27 @@ def build_lstm(seq_shape, n_classes, hidden_units, lr):
 	return model
 
 # params
-weights_filepath = './lstm_weights.hdf5'
 lr = 0.001
 n_classes = 3
 hidden_units = 128
+batch_size = 128
+epochs = 400
+
+if len(sys.argv) != 6:
+	print('python {} train_x_series.npy train_y.csv model.json weights.h5 result.png'.format(sys.argv[0]))
+	exit()
+train_x_series_path = sys.argv[1]
+train_y_path = sys.argv[2]
+model_json_path = sys.argv[3]
+model_weights_path = sys.argv[4]
+result_image_path = sys.argv[5]
 
 # load data
-train_x_series = np.load('./data/train_series_sampled.npy')
+train_x_series = np.load(train_x_series_path)
 valid_x_series = np.load('./data/valid_series.npy')
 test_x_series = np.load('./data/test_series.npy')
 
-train_y = to_categorical(pd.read_csv('./data/train_sampled.csv')['roas'].values)
+train_y = to_categorical(pd.read_csv(train_y_path)['roas'].values)
 valid_y = to_categorical(pd.read_csv('./data/validset.csv')['roas'].values)
 test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 
@@ -41,26 +53,19 @@ test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 seq_shape = train_x_series.shape[1:]
 
 model = build_lstm(seq_shape, n_classes, hidden_units, lr)
-ckpt = ModelCheckpoint(filepath=weights_filepath, verbose=1, save_best_only=True)
+
+model_json = model.to_json()
+with open(model_json_path, 'w') as json_file:
+	json_file.write(model_json)
+
+ckpt = ModelCheckpoint(filepath=model_weights_path, verbose=1, save_best_only=True)
 
 history = model.fit(train_x_series,
 	train_y,
-	batch_size=128,
-	epochs=500,
+	batch_size=batch_size,
+	epochs=epochs,
 	validation_data=(valid_x_series, valid_y),
 	callbacks=[ckpt])
-
-# predict
-model.load_weights(weights_filepath)
-predictions = model.predict(test_x_series)
-
-# acc
-correct = 0
-for i in range(test_y.shape[0]):
-	if np.argmax(predictions[i]) == np.argmax(test_y[i]):
-		correct += 1
-
-test_acc = (correct / len(test_y)) // 0.01 * 0.01
 
 # plot learning curve
 f = plt.figure()
@@ -71,8 +76,5 @@ plt.title('model accuracy')
 plt.ylabel('accuracy')
 plt.xlabel('epoch')
 plt.legend(['train', 'valid'], loc='upper left')
-plt.text(0.02, 0.84,
-	'testset accuracy: {}'.format(test_acc),
-	ha='left', va='top',
-	transform=ax.transAxes)
-plt.show()
+plt.savefig(result_image_path)
+

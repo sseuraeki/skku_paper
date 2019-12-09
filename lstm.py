@@ -32,7 +32,7 @@ batch_size = 128
 epochs = 400
 
 if len(sys.argv) != 6:
-	print('python {} train_x_series.npy train_y.csv model.json weights.h5 result.png'.format(sys.argv[0]))
+	print('Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png'.format(sys.argv[0]))
 	exit()
 train_x_series_path = sys.argv[1]
 train_y_path = sys.argv[2]
@@ -43,11 +43,9 @@ result_image_path = sys.argv[5]
 # load data
 train_x_series = np.load(train_x_series_path)
 valid_x_series = np.load('./data/valid_series.npy')
-test_x_series = np.load('./data/test_series.npy')
 
 train_y = to_categorical(pd.read_csv(train_y_path)['roas'].values)
 valid_y = to_categorical(pd.read_csv('./data/validset.csv')['roas'].values)
-test_y = to_categorical(pd.read_csv('./data/testset.csv')['roas'].values)
 
 # build model and train
 seq_shape = train_x_series.shape[1:]

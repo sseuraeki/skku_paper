@@ -5,7 +5,7 @@ from keras.models import model_from_json
 from tensorflow.keras.utils import to_categorical
 
 if len(sys.argv) != 3:
-	print('python {} model_json model_weights'.format(sys.argv[0]))
+	print('Usg: python {} model_json model_weights'.format(sys.argv[0]))
 	exit()
 
 # load model

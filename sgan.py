@@ -1,3 +1,4 @@
+import sys
 import numpy as np
 import pandas as pd
 from keras import backend
@@ -16,15 +17,27 @@ n_epochs = 400
 learning_rate = 0.0003
 beta_1 = 0.5
 latent_dim = 100
-n_classes = 2
-sup_train_x_path = './data/train_series.npy'
-sup_train_y_path = './data/trainset.csv'
+n_classes = 3
 sup_valid_x_path = './data/valid_series.npy'
 sup_valid_y_path = './data/validset.csv'
-sup_test_x_path = './data/test_series.npy'
-sup_test_y_path = './data/testset.csv'
 unsup_path = './data/unlabeled.npy'
-model_path = './sgan.h5'
+
+if len(sys.argv) != 7:
+	print(
+		'Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png cnn/lstm/resnet'.format(
+			sys.argv[0]))
+	exit()
+
+if sys.argv[6] not in ['cnn', 'lstm', 'resnet']:
+	print("ERROR: method must be either one of ['cnn', 'lstm', 'resnet']")
+	exit()
+
+sup_train_x_path = sys.argv[1]
+sup_train_y_path = sys.argv[2]
+model_json_path = sys.argv[3]
+model_weights_path = sys.argv[4]
+result_image_path = sys.argv[5]
+method = sys.argv[6]
 
 # functions
 def Conv1DTranspose(input_tensor, filters, kernel_size, strides=2, padding='same'):
@@ -44,90 +57,91 @@ def build_discriminator(seq_shape, n_classes, hidden_units=128):
 	# input (None, 4, 8)
 	seq_layer = Input(shape=(seq_shape[1], seq_shape[2],))
 
-	b1 = Conv1D(filters=hidden_units, kernel_size=8, padding='same')(seq_layer)
-	b1 = BatchNormalization()(b1)
-	b1 = Activation('relu')(b1)
+	if method == 'resnet':
+		b1 = Conv1D(filters=hidden_units, kernel_size=8, padding='same')(seq_layer)
+		b1 = BatchNormalization()(b1)
+		b1 = Activation('relu')(b1)
 
-	b1 = Conv1D(filters=hidden_units, kernel_size=5, padding='same')(b1)
-	b1 = BatchNormalization()(b1)
-	b1 = Activation('relu')(b1)
+		b1 = Conv1D(filters=hidden_units, kernel_size=5, padding='same')(b1)
+		b1 = BatchNormalization()(b1)
+		b1 = Activation('relu')(b1)
 
-	b1 = Conv1D(filters=hidden_units, kernel_size=3, padding='same')(b1)
-	b1 = BatchNormalization()(b1)
+		b1 = Conv1D(filters=hidden_units, kernel_size=3, padding='same')(b1)
+		b1 = BatchNormalization()(b1)
 
-	shortcut = Conv1D(filters=hidden_units, kernel_size=1, padding='same')(seq_layer)
-	shortcut = BatchNormalization()(shortcut)
+		shortcut = Conv1D(filters=hidden_units, kernel_size=1, padding='same')(seq_layer)
+		shortcut = BatchNormalization()(shortcut)
 
-	b1 = add([shortcut, b1])
-	b1 = Activation('relu')(b1)
+		b1 = add([shortcut, b1])
+		b1 = Activation('relu')(b1)
 
-	# block 2
-	b2 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b1)
-	b2 = BatchNormalization()(b2)
-	b2 = Activation('relu')(b2)
+		# block 2
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b1)
+		b2 = BatchNormalization()(b2)
+		b2 = Activation('relu')(b2)
 
-	b2 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b2)
-	b2 = BatchNormalization()(b2)
-	b2 = Activation('relu')(b2)
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b2)
+		b2 = BatchNormalization()(b2)
+		b2 = Activation('relu')(b2)
 
-	b2 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b2)
-	b2 = BatchNormalization()(b2)
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b2)
+		b2 = BatchNormalization()(b2)
 
-	shortcut = Conv1D(filters=hidden_units*2, kernel_size=1, padding='same')(b1)
-	shortcut = BatchNormalization()(shortcut)
+		shortcut = Conv1D(filters=hidden_units*2, kernel_size=1, padding='same')(b1)
+		shortcut = BatchNormalization()(shortcut)
 
-	b2 = add([shortcut, b2])
-	b2 = Activation('relu')(b2)
+		b2 = add([shortcut, b2])
+		b2 = Activation('relu')(b2)
 
-	# block 3
-	b3 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b2)
-	b3 = BatchNormalization()(b3)
-	b3 = Activation('relu')(b3)
+		# block 3
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b2)
+		b3 = BatchNormalization()(b3)
+		b3 = Activation('relu')(b3)
 
-	b3 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b3)
-	b3 = BatchNormalization()(b3)
-	b3 = Activation('relu')(b3)
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b3)
+		b3 = BatchNormalization()(b3)
+		b3 = Activation('relu')(b3)
 
-	b3 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b3)
-	b3 = BatchNormalization()(b3)
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b3)
+		b3 = BatchNormalization()(b3)
 
-	shortcut = BatchNormalization()(b2)
+		shortcut = BatchNormalization()(b2)
 
-	b3 = add([shortcut, b3])
-	b3 = Activation('relu')(b3)
+		b3 = add([shortcut, b3])
+		b3 = Activation('relu')(b3)
 
-	# output
-	pooling = GlobalAveragePooling1D()(b3)
+		# output
+		h = GlobalAveragePooling1D()(b3)
 
-	'''
-	# downsample (None, 4, 128)
-	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(seq_layer)
-	h = LeakyReLU(alpha=0.2)(h)
+	if method == 'cnn':
+		# downsample (None, 4, 128)
+		h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(seq_layer)
+		h = LeakyReLU(alpha=0.2)(h)
 
-	# downsample (None, 4, 128)
-	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
-	h = LeakyReLU(alpha=0.2)(h)
+		# downsample (None, 4, 128)
+		h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
+		h = LeakyReLU(alpha=0.2)(h)
 
-	# downsample (None, 4, 128)
-	h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
-	h = LeakyReLU(alpha=0.2)(h)
+		# downsample (None, 4, 128)
+		h = Conv1D(filters=hidden_units, kernel_size=3, strides=1, padding='same')(h)
+		h = LeakyReLU(alpha=0.2)(h)
 
-	# fully connect (None, 512)
-	h = Flatten()(h)
-	h = Dropout(0.4)(h)
-	'''
-	#h = LSTM(hidden_units)(seq_layer)
-	#h = Dense(n_classes)(h)
-	h = Dense(n_classes)(pooling)
+		# fully connect (None, 512)
+		h = Flatten()(h)
+		h = Dropout(0.4)(h)
+
+	if method == 'lstm':
+		h = LSTM(hidden_units, return_sequences=True)(seq_layer)
+		h = LSTM(hidden_units)(h)
+
+	h = Dense(n_classes)(h)
 
 	# supervised output
-	#sup_layer = Activation('softmax')(h)
-	sup_layer = Activation('sigmoid')(h)
+	sup_layer = Activation('softmax')(h)
 
 	# build supervised discriminator
 	sup_model = Model(seq_layer, sup_layer)
-	#sup_model.compile(loss='categorical_crossentropy',
-	sup_model.compile(loss='binary_crossentropy',
+	sup_model.compile(loss='categorical_crossentropy',
 		optimizer=Adam(lr=learning_rate, beta_1=beta_1),
 		metrics=['accuracy'])
 
@@ -220,12 +234,9 @@ def train(generator, sup_model, unsup_model, gan,
 	unsup_batch_size = unsup_x.shape[0] // n_batches
 
 	# enumerate epochs
-	all_sup_losses = []
 	all_sup_accs = []
-	all_unsup_losses = []
-	all_gan_losses = []
 	all_valid_accs = []
-	best_valid_acc = 0.0
+	best_valid_loss = np.inf
 	for n_epoch in range(n_epochs):
 		sup_losses = []
 		sup_accs = []
@@ -252,32 +263,25 @@ def train(generator, sup_model, unsup_model, gan,
 			gan_losses.append(gan_loss)
 
 		# test on validset
-		predictions = sup_model.predict(valid_x)
-		correct = 0
-		for i in range(predictions.shape[0]):
-			if np.argmax(predictions[i]) == np.argmax(valid_y[i]):
-				correct += 1
-		valid_acc = correct / predictions.shape[0]
+		score = sup_model.evaluate(valid_x, valid_y)
 
 		print('Epoch', n_epoch+1)
 		print('Supervised loss:', np.mean(sup_losses))
 		print('Supervised acc:', np.mean(sup_accs))
 		print('Unsupervised loss:', np.mean(unsup_losses))
 		print('GAN loss:', np.mean(gan_losses))
-		print('Valid acc:', valid_acc)
+		print('Valid acc:', score[1])
 		print('')
 
-		all_sup_losses.append(np.mean(sup_losses))
 		all_sup_accs.append(np.mean(sup_accs))
-		all_unsup_losses.append(np.mean(unsup_losses))
-		all_gan_losses.append(np.mean(gan_losses))
-		all_valid_accs.append(valid_acc)
+		all_valid_accs.append(score[1])
 
-		if valid_acc > best_valid_acc:
-			best_valid_acc = valid_acc
-			sup_model.save_weights(model_path)
+		valid_loss = score[0]
+		if valid_loss < best_valid_loss:
+			best_valid_loss = valid_loss
+			sup_model.save_weights(model_weights_path)
 
-	return all_sup_losses, all_sup_accs, all_unsup_losses, all_gan_losses, all_valid_accs
+	return all_sup_accs, all_valid_accs
 
 # load data
 sup_train_x = np.load(sup_train_x_path)
@@ -285,9 +289,6 @@ sup_train_y = to_categorical(pd.read_csv(sup_train_y_path)['roas'].values)
 
 sup_valid_x = np.load(sup_valid_x_path)
 sup_valid_y = to_categorical(pd.read_csv(sup_valid_y_path)['roas'].values)
-
-sup_test_x = np.load(sup_test_x_path)
-sup_test_y = to_categorical(pd.read_csv(sup_test_y_path)['roas'].values)
 
 unsup_x = np.load(unsup_path)
 np.random.shuffle(unsup_x)
@@ -300,20 +301,14 @@ generator = build_generator(latent_dim, seq_shape)
 
 gan = build_gan(generator, unsup_model)
 
+model_json = sup_model.to_json()
+with open(model_json_path, 'w') as json_file:
+	json_file.write(model_json)
+
 # train model
 results = train(generator, sup_model, unsup_model, gan,
 	sup_train_x, sup_train_y, unsup_x, sup_valid_x, sup_valid_y,
 	latent_dim, n_epochs=n_epochs, sup_batch_size=batch_size)
-
-# load weights and test
-sup_model.load_weights(model_path)
-predictions = sup_model.predict(sup_test_x)
-correct = 0
-for i in range(sup_test_y.shape[0]):
-	if np.argmax(predictions[i]) == np.argmax(sup_test_y[i]):
-		correct += 1
-test_acc = correct / sup_test_y.shape[0]
-print('Test accuracy:', test_acc)
 
 # plot results
 fig = plt.figure()
@@ -329,7 +324,7 @@ plt.text(0.02, 0.65,
 	'testset accuracy: {}'.format(test_acc),
 	ha='left', va='top',
 	transform=ax.transAxes)
-plt.show()
+plt.savefig(result_image_path)
 
 
 

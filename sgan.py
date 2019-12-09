@@ -313,17 +313,10 @@ results = train(generator, sup_model, unsup_model, gan,
 # plot results
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
-result1, = ax.plot(results[0], label='Supervised loss')
-result2, = ax.plot(results[1], label='Trainset acc')
-result3, = ax.plot(results[2], label='Unsupervised loss')
-result4, = ax.plot(results[3], label='GAN loss')
-result5, = ax.plot(results[4], label='Validset acc')
+result1, = ax.plot(results[1], label='Trainset acc')
+result2, = ax.plot(results[4], label='Validset acc')
 ax.legend(loc='upper left')
 plt.title('SGAN results')
-plt.text(0.02, 0.65,
-	'testset accuracy: {}'.format(test_acc),
-	ha='left', va='top',
-	transform=ax.transAxes)
 plt.savefig(result_image_path)
 
 

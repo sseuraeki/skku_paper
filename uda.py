@@ -9,7 +9,7 @@ from keras.utils import to_categorical
 from keras.losses import kullback_leibler_divergence as KL
 from keras.losses import categorical_crossentropy
 from keras.layers import Input, Conv1D, LeakyReLU, Flatten, Dropout, Dense
-from keras.layers import add
+from keras.layers import LSTM, BatchNormalization, Activation, add, GlobalAveragePooling1D
 import matplotlib.pyplot as plt
 
 # parameters
@@ -61,6 +61,66 @@ def build_supervised_model(seq_shape, n_classes):
 		# fully connect (None, 512)
 		h = Flatten()(h)
 		h = Dropout(0.4)(h)
+
+	if model_type == 'lstm':
+		h = LSTM(hidden_units, return_sequences=True)(labeled_input)
+		h = LSTM(hidden_units)(h)
+		
+	if model_type == 'resnet':
+		b1 = Conv1D(filters=hidden_units, kernel_size=8, padding='same')(labeled_input)
+		b1 = BatchNormalization()(b1)
+		b1 = Activation('relu')(b1)
+
+		b1 = Conv1D(filters=hidden_units, kernel_size=5, padding='same')(b1)
+		b1 = BatchNormalization()(b1)
+		b1 = Activation('relu')(b1)
+
+		b1 = Conv1D(filters=hidden_units, kernel_size=3, padding='same')(b1)
+		b1 = BatchNormalization()(b1)
+
+		shortcut = Conv1D(filters=hidden_units, kernel_size=1, padding='same')(labeled_input)
+		shortcut = BatchNormalization()(shortcut)
+
+		b1 = add([shortcut, b1])
+		b1 = Activation('relu')(b1)
+
+		# block 2
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b1)
+		b2 = BatchNormalization()(b2)
+		b2 = Activation('relu')(b2)
+
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b2)
+		b2 = BatchNormalization()(b2)
+		b2 = Activation('relu')(b2)
+
+		b2 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b2)
+		b2 = BatchNormalization()(b2)
+
+		shortcut = Conv1D(filters=hidden_units*2, kernel_size=1, padding='same')(b1)
+		shortcut = BatchNormalization()(shortcut)
+
+		b2 = add([shortcut, b2])
+		b2 = Activation('relu')(b2)
+
+		# block 3
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=8, padding='same')(b2)
+		b3 = BatchNormalization()(b3)
+		b3 = Activation('relu')(b3)
+
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=5, padding='same')(b3)
+		b3 = BatchNormalization()(b3)
+		b3 = Activation('relu')(b3)
+
+		b3 = Conv1D(filters=hidden_units*2, kernel_size=3, padding='same')(b3)
+		b3 = BatchNormalization()(b3)
+
+		shortcut = BatchNormalization()(b2)
+
+		b3 = add([shortcut, b3])
+		b3 = Activation('relu')(b3)
+
+		# output
+		h = GlobalAveragePooling1D()(b3)
 
 	# compile supervised model
 	output = Dense(n_classes, activation='softmax')(h)

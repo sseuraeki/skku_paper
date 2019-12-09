@@ -166,7 +166,7 @@ def sample_unsupervised(dataset, n_samples, n_batch):
 
 def augment(x, augment_type):
 	if augment_type == 'scale':
-		return tsaug.random_affine(x, max_a=1.1, min_a=0.1, max_b=0.01, min_b=-0.01)
+		return tsaug.random_affine(x, max_a=1.1, min_a=0.9, max_b=0.01, min_b=-0.01)
 	if augment_type == 'jitter':
 		return tsaug.random_jitter(x)
 	if augment_type == 'time_warp':

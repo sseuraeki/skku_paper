@@ -29,7 +29,7 @@ lr = 0.001
 n_classes = 3
 hidden_units = 128
 batch_size = 128
-epochs = 400
+epochs = 1000
 
 if len(sys.argv) != 6:
 	print('Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png'.format(sys.argv[0]))

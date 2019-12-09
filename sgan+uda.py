@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 # parameters
 batch_size = 128
 hidden_units = 128
-n_epochs = 10
+n_epochs = 1000
 learning_rate = 0.001
 latent_dim = 100
 

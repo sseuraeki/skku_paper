@@ -16,7 +16,7 @@ n_classes = 3
 learning_rate = 0.001
 min_lr = 0.0001
 batch_size = 64
-epochs = 400
+epochs = 1000
 
 if len(sys.argv) != 6:
 	print('Usg: python {} train_x_series.npy train_y.csv model.json weights.h5 result.png'.format(sys.argv[0]))
